@@ -67,7 +67,7 @@ async def gemini_llm_callback(state: Dict[str, Any]) -> Dict[str, Any]:
     
     if use_live_api:
         try:
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             response = await asyncio.to_thread(model.generate_content, prompt)
             return {"summary": response.text}
         except Exception as e:
@@ -125,7 +125,7 @@ def build_benchmark_workflow() -> WorkflowGraph:
     llm = LLMNode(
         id="llm_summary",
         name="Gemini Summary",
-        model="gemini-1.5-flash",
+        model="gemini-2.5-flash",
         prompt_template="Summarize: {search_results}",
         inputs=["search_results"],
         outputs=["summary"]
