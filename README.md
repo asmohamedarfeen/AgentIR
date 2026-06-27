@@ -60,8 +60,52 @@ Optimizing a standard agent pipeline with AgentIR yields **33.3% execution laten
 
 ---
 
+## Setup & Installation
+
+Ensure you have Python 3.12+ and `uv` installed. Clone the repository and install the dependencies:
+
+```bash
+# Clone the repository
+git clone https://github.com/asmohamedarfeen/AgentIR.git
+cd AgentIR
+
+# Install dependencies using uv
+uv sync
+```
+
+---
+
+## Quick Start & Running Benchmarks
+
+### 1. Run the Python Benchmark Script
+Execute the benchmarking program to compare unoptimized sequential runs with optimized AgentIR runs:
+
+```bash
+# Running in simulated mode (no API key needed)
+PYTHONPATH=. uv run python agentir/examples/benchmark.py
+
+# Running with live Gemini API calls
+export GEMINI_API_KEY="your-api-key-here"
+PYTHONPATH=. uv run python agentir/examples/benchmark.py
+```
+
+### 2. Run the Jupyter Notebook
+Open the interactive notebook to execute the benchmark, view graphical Matplotlib comparative reports, and see compiled Graphviz DAG diagrams inline:
+
+```bash
+uv run jupyter notebook agentir/examples/benchmark.ipynb
+```
+
+### 3. Run the Unit Test Suite
+To run all 26 test cases checking IR validation, compiler passes, parsing, and execution runtimes:
+
+```bash
+uv run pytest
+```
+
+---
+
 ## Documentation
 
 * **Architecture and Specifications**: Read the detailed compiler design details in [docs/ARCHITECTURE.md](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/docs/ARCHITECTURE.md).
 * **Interactive Benchmarks**: Open the notebook [examples/benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/benchmark.ipynb) to run workflows and see Matplotlib resource comparisons and inline Graphviz renderings.
-# AgentIR
