@@ -110,6 +110,9 @@ uv run jupyter notebook agentir/examples/benchmark.ipynb
 
 # LangGraph Integrated Benchmark
 uv run jupyter notebook agentir/examples/langgraph_benchmark.ipynb
+
+# LangGraph Multi-Agent Token-Aware Benchmark
+uv run jupyter notebook agentir/examples/multi_agent_benchmark.ipynb
 ```
 
 ### 3. Run the Unit Test Suite
@@ -127,3 +130,4 @@ uv run pytest
 * **Interactive Benchmarks**: 
   - [examples/benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/benchmark.ipynb): General benchmark run.
   - [examples/langgraph_benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/langgraph_benchmark.ipynb): Full native LangGraph integration benchmark with comparative graphs.
+  - [examples/multi_agent_benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/multi_agent_benchmark.ipynb): Multi-agent, token-aware optimization benchmark with detailed resource savings charts.
