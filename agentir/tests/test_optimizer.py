@@ -199,3 +199,42 @@ def test_cost_estimator():
     report_par = estimator.estimate(graph_par)
     assert report_par.serial_latency_seconds == 3.0  # sum of runtimes is still 3.0s
     assert report_par.critical_path_latency_seconds == 1.5  # Parallel execution of both drops to 1.5s
+
+
+def test_token_optimizer():
+    """Verify that TokenOptimizer correctly applies token reduction and caching annotations."""
+    from agentir.optimizer.token_optimizer import TokenOptimizer
+    
+    graph = WorkflowGraph()
+    start = StartNode(id="start", name="Start")
+    router = LLMNode(
+        id="router", name="Router Agent", model="gpt-4", prompt_template="Route...",
+        inputs=["query"], outputs=["route_decision"]
+    )
+    researcher = LLMNode(
+        id="researcher", name="Research Agent", model="gpt-4", prompt_template="Summarize...",
+        inputs=["document_text"], outputs=["notes"],
+        system_instruction="Same prompt instruction"
+    )
+    coder = LLMNode(
+        id="coder", name="Coder Agent", model="gpt-4", prompt_template="Write code...",
+        inputs=["query"], outputs=["code"],
+        system_instruction="Same prompt instruction"
+    )
+    end = EndNode(id="end", name="End")
+
+    for n in [start, router, researcher, coder, end]:
+        graph.add_node(n)
+
+    optimizer = TokenOptimizer()
+    optimized = optimizer.optimize(graph)
+
+    # 1. Classification cap applied (router capped to 64 output tokens)
+    assert optimized.nodes["router"].metadata["max_output_tokens"] == 64
+
+    # 2. Input truncation limit applied (researcher consumes large document_text)
+    assert optimized.nodes["researcher"].metadata["input_truncation_limit"] == 1500
+
+    # 3. Context caching enabled (researcher and coder share identical system instruction)
+    assert optimized.nodes["researcher"].metadata["context_cache_enabled"] is True
+    assert optimized.nodes["coder"].metadata["context_cache_enabled"] is True

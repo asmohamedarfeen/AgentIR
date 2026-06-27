@@ -44,11 +44,24 @@ class WorkflowExecutor:
         last_exc: Optional[Exception] = None
         for attempt in range(retry_count + 1):
             try:
-                # Execute callback (force async execution if it's a coroutine, otherwise execute directly)
+                # Create a node-specific state copy to prevent side effects on global state
+                node_state = state.copy()
+                
+                # Apply input truncation limit if annotated by the compiler
+                trunc_limit = node.metadata.get("input_truncation_limit")
+                if trunc_limit:
+                    for var in node.inputs:
+                        if var in node_state and isinstance(node_state[var], str) and len(node_state[var]) > trunc_limit:
+                            node_state[var] = node_state[var][:trunc_limit] + "... [truncated to save tokens]"
+                
+                # Inject node metadata so callbacks can access compiler properties (like max_output_tokens)
+                node_state["_metadata"] = node.metadata
+
+                # Execute callback
                 if asyncio.iscoroutinefunction(callback):
-                    updates = await callback(state)
+                    updates = await callback(node_state)
                 else:
-                    updates = callback(state)
+                    updates = callback(node_state)
                 return updates or {}
             except Exception as e:
                 last_exc = e
