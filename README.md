@@ -6,6 +6,18 @@ AgentIR is an open-source compiler-inspired infrastructure for AI agent workflow
 
 ---
 
+## About
+
+AgentIR brings traditional compiler design principles to AI agent orchestration. Modern frameworks (like LangGraph, CrewAI, and LlamaIndex) excel at defining and running agent workflows, but they execute graphs exactly as written.
+
+AgentIR bridges this gap by introducing a compilation layer that decouples **workflow definition** from **workflow execution**:
+* **Common Intermediate Representation (IR)**: Workflow graphs are parsed into a unified, framework-agnostic IR, standardizing node properties and port-based control transitions.
+* **Static Graph Analysis**: Sanity checks (reachability, dangling edges, infinite loops) and data-flow input/output constraints are analyzed statically.
+* **Graph Optimizations**: Standard compiler transformations (Dead Node Elimination, Common Subexpression Elimination for duplicate tools, and data-flow parallelization) are applied to rewrite the graph into a cheaper, faster pipeline.
+* **Execution Stage Scheduling**: Estimates serial vs. parallel latencies using critical-path analysis, compiling concurrent execution schedules.
+
+---
+
 ## High-Level Pipeline
 
 ```mermaid
