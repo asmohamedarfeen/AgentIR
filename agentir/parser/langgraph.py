@@ -51,16 +51,16 @@ class LangGraphParser:
             node_type = self._determine_node_type(name, node_val)
             
             # Extract inputs/outputs if defined on callable or metadata
-            inputs = getattr(node_val, "inputs", [])
-            outputs = getattr(node_val, "outputs", [])
+            inputs = self._get_node_attribute(node_val, "inputs", [])
+            outputs = self._get_node_attribute(node_val, "outputs", [])
 
             if node_type == NodeType.LLM:
                 ir_graph.add_node(
                     LLMNode(
                         id=name,
                         name=name,
-                        model=getattr(node_val, "model", "default-llm"),
-                        prompt_template=getattr(node_val, "prompt_template", "{text}"),
+                        model=self._get_node_attribute(node_val, "model", "default-llm"),
+                        prompt_template=self._get_node_attribute(node_val, "prompt_template", "{text}"),
                         inputs=inputs,
                         outputs=outputs
                     )
@@ -70,8 +70,8 @@ class LangGraphParser:
                     ToolNode(
                         id=name,
                         name=name,
-                        tool_name=getattr(node_val, "tool_name", name),
-                        args=getattr(node_val, "args", {}),
+                        tool_name=self._get_node_attribute(node_val, "tool_name", name),
+                        args=self._get_node_attribute(node_val, "args", {}),
                         inputs=inputs,
                         outputs=outputs
                     )
@@ -91,6 +91,14 @@ class LangGraphParser:
         # edges is a set/list of tuples: (source, target)
         for src, tgt in edges:
             ir_graph.add_edge(Edge(source=src, target=tgt))
+            if tgt == "__end__":
+                src_node = ir_graph.nodes.get(src)
+                if src_node and getattr(src_node, "outputs", None):
+                    end_node = ir_graph.nodes.get("__end__")
+                    if end_node:
+                        for var in src_node.outputs:
+                            if var not in end_node.inputs:
+                                end_node.inputs.append(var)
 
         # 3. Map conditional branches
         # In LangGraph, a branch contains a path condition function and a path_map (outcome -> target)
@@ -134,11 +142,36 @@ class LangGraphParser:
 
         return ir_graph
 
+    def _resolve_callable(self, node_val: Any) -> list:
+        """Helper to resolve the underlying raw callable/function from wrappers."""
+        candidates = [node_val]
+        
+        # Resolve LangGraph's wrapper (StateNodeSpec -> runnable)
+        runnable = getattr(node_val, "runnable", None)
+        if runnable is not None:
+            candidates.append(runnable)
+            
+            # Resolve LangChain's wrappers (afunc, func, bound)
+            for attr in ("afunc", "func", "bound"):
+                inner = getattr(runnable, attr, None)
+                if inner is not None:
+                    candidates.append(inner)
+                    
+        return candidates
+
+    def _get_node_attribute(self, node_val: Any, name: str, default: Any = None) -> Any:
+        """Search candidates in order to find the first candidate with the attribute."""
+        for candidate in self._resolve_callable(node_val):
+            val = getattr(candidate, name, None)
+            if val is not None:
+                return val
+        return default
+
     def _determine_node_type(self, name: str, node_val: Any) -> NodeType:
         """Heuristic to determine node type based on node properties or naming conventions."""
         name_lower = name.lower()
-        if "llm" in name_lower or "agent" in name_lower or hasattr(node_val, "model"):
+        if "llm" in name_lower or "agent" in name_lower or self._get_node_attribute(node_val, "model") is not None:
             return NodeType.LLM
-        if "tool" in name_lower or hasattr(node_val, "tool_name"):
+        if "tool" in name_lower or self._get_node_attribute(node_val, "tool_name") is not None:
             return NodeType.TOOL
         return NodeType.TOOL  # Fallback to standard execution node as a tool
