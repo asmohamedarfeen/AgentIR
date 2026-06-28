@@ -131,3 +131,9 @@ uv run pytest
   - [examples/benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/benchmark.ipynb): General benchmark run.
   - [examples/langgraph_benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/langgraph_benchmark.ipynb): Full native LangGraph integration benchmark with comparative graphs.
   - [examples/multi_agent_benchmark.ipynb](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/agentir/examples/multi_agent_benchmark.ipynb): Multi-agent, token-aware optimization benchmark with detailed resource savings charts.
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](file:///Users/asmohamedarfeen/Desktop/project/foss%20agentir/LICENSE) file for details.
