@@ -20,6 +20,7 @@ from agentir.optimizer.dead_nodes import DeadNodesOptimizer
 from agentir.optimizer.duplicate_tools import DuplicateToolsOptimizer
 from agentir.optimizer.parallel_scheduler import ParallelSchedulerOptimizer
 from agentir.optimizer.cache_optimizer import CacheOptimizer
+from agentir.optimizer.token_optimizer import TokenOptimizer
 from agentir.optimizer.cost_estimator import CostEstimator
 from agentir.runtime.executor import WorkflowExecutor
 
@@ -65,17 +66,25 @@ async def gemini_llm_callback(state: Dict[str, Any]) -> Dict[str, Any]:
     prompt = f"Summarize these search results: {state.get('search_results', '')}"
     print(f"  [LLM] Calling Gemini API (Prompt size: {len(prompt)} chars)...")
     
+    max_tokens = state.get("_metadata", {}).get("max_output_tokens")
+    
     if use_live_api:
         try:
             model = genai.GenerativeModel("gemini-2.5-flash")
-            response = await asyncio.to_thread(model.generate_content, prompt)
+            config = {}
+            if max_tokens:
+                config["max_output_tokens"] = max_tokens
+            response = await asyncio.to_thread(model.generate_content, prompt, generation_config=config if config else None)
             return {"summary": response.text}
         except Exception as e:
             print(f"    Gemini API call failed ({e}). Falling back to simulation.")
     
     # Simulation fallback
     await asyncio.sleep(1.2)
-    return {"summary": "AgentIR is an optimization compiler for AI agents."}
+    simulated_resp = "AgentIR is an optimization compiler for AI agents."
+    if max_tokens and len(simulated_resp) > max_tokens:
+        simulated_resp = simulated_resp[:max_tokens]
+    return {"summary": simulated_resp}
 
 
 # Define the callback registry
@@ -205,6 +214,9 @@ async def main():
     
     print("  -> Inserting Cache Descriptors...")
     opt_graph = CacheOptimizer().optimize(opt_graph)
+    
+    print("  -> Applying Token Optimizations...")
+    opt_graph = TokenOptimizer().optimize(opt_graph)
     
     # Estimate costs
     estimator = CostEstimator()
